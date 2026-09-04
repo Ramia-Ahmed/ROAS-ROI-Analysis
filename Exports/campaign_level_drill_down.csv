@@ -1,0 +1,15 @@
+channel,campaign,total_spend,total_revenue,blended_cac,roas,roi_pct,spend_share_pct,revenue_share_pct
+Organic/SEO,SEO - Blog,15005.37,96035.8,3.75,6.4,540.01,52.6,53.21
+Organic/SEO,SEO - Landing Pages,13521.37,84461.31,3.09,6.25,524.65,47.4,46.79
+Email,Email - Newsletter,10188.75,57854.11,27.76,5.68,467.82,50.33,52.62
+Email,Email - Promo,10055.39,52092.8,28.01,5.18,418.06,49.67,47.38
+Paid Search,Search - Competitor,90445.4,302906.67,31.39,3.35,234.91,31.6,33.32
+Paid Search,Search - Brand,99151.96,310127.9,22.88,3.13,212.78,34.65,34.12
+Paid Search,Search - Generic,96587.25,296023.65,34.66,3.06,206.48,33.75,32.56
+Affiliate,Affiliate - Partner A,29137.29,86300.87,26.81,2.96,196.19,49.98,50.43
+Affiliate,Affiliate - Partner B,29157.62,84814.85,26.73,2.91,190.88,50.02,49.57
+Paid Social,Social - Prospecting,78057.41,192602.92,30.99,2.47,146.75,34.82,35.77
+Paid Social,Social - Lookalike,70852.28,172514.46,22.01,2.43,143.48,31.6,32.03
+Paid Social,Social - Retargeting,75291.05,173403.55,27.53,2.3,130.31,33.58,32.2
+Display,Display - Banner,38541.58,52867.68,32.66,1.37,37.17,48.28,49.11
+Display,Display - Native,41293.74,54785.15,31.64,1.33,32.67,51.72,50.89
