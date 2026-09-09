@@ -1,46 +1,75 @@
-# ROAS & ROI Analysis — Marketing Channel Efficiency
+# ROAS & ROI Analysis
 
-## Overview
+## 1. Background and Overview
 
-This project analyzes marketing return on ad spend (ROAS) and return on investment (ROI) across six marketing channels over a full year (2024), using a synthetic dataset built specifically for this analysis. The goal was to answer a set of questions a marketing/growth stakeholder would realistically ask: is spend profitable overall, which channels are efficient, is the inefficiency isolated to specific campaigns, does spending more erode efficiency, and — if a channel underperforms — is that a funnel problem or a cost problem.
+Marketing budgets are only as good as the return they generate, but "which channels are actually worth the spend" is a surprisingly easy question to get wrong — a channel can look strong on ROAS while quietly having a worse funnel, or look weak overall while a handful of its campaigns are outperforming everything else. This project evaluates marketing return using a **fully synthetic marketing dataset**, generated specifically for this analysis and independent of any other dataset used elsewhere in this portfolio.
 
-**Tools used:** DuckDB (SQL), Python (dataset generation), Power BI (dashboard)
+The analysis was built to answer four questions a marketing or growth team would ask directly:
+- Overall, is the marketing spend profitable — and by how much?
+- Which channels and campaigns generate the best return, and which are underperforming?
+- Is spend efficiency holding steady over time, or are channels showing diminishing returns as more is invested?
+- When a channel underperforms, is it because of a weak funnel (low click-through or conversion) or because it costs more to acquire each customer?
 
-## Dataset
+## 2. Data Structure Overview
 
-The dataset is **fully synthetic**, generated in Python and not derived from any real company's data. It simulates weekly campaign-level marketing performance across 6 channels (Paid Search, Paid Social, Display, Email, Affiliate, Organic/SEO) and 14 campaigns, for all 52 weeks of 2024 (742 rows).
+The dataset is a single flat table, `roas_roi_synthetic_data.csv` (742 rows, 10 columns), loaded into DuckDB and queried via `roas_roi.sql`. Each row represents one campaign's performance for a given week:
 
-Each channel was built with a distinct, intentional performance profile (base ROAS target, cost-per-click range, and spend range) so the dataset would contain realistic, discoverable patterns rather than pure noise — for example, Organic/SEO and Email were designed as low-cost/high-efficiency channels, and Display as a high-cost/low-efficiency one. A seasonal spend increase was also built into November and December to simulate a holiday campaign push.
+| Field | Type | Description |
+|---|---|---|
+| week_start_date | DATE | Week the row covers (56 unique weeks) |
+| channel | VARCHAR | Marketing channel (6 unique: e.g., Paid Search, Organic/SEO, Email) |
+| campaign | VARCHAR | Specific campaign within a channel (15 unique) |
+| impressions | BIGINT | Ad impressions served that week |
+| clicks | BIGINT | Clicks that week |
+| conversions | BIGINT | Conversions that week |
+| spend | DOUBLE | Marketing spend for that campaign-week |
+| revenue | DOUBLE | Revenue attributed to that campaign-week |
+| roas | DOUBLE | Pre-calculated ROAS for that row |
+| roi_pct | DOUBLE | Pre-calculated ROI (%) for that row |
 
-**Columns:** `week_start_date`, `channel`, `campaign`, `impressions`, `clicks`, `conversions`, `spend`, `revenue`, `roas`, `roi_pct`
+Because this is a single flat, pre-aggregated synthetic table, no joins or data-cleaning stage were required. The SQL work centers on rolling these campaign-week rows up to overall, channel, and campaign-level summaries, plus monthly/weekly trend views — and on deriving CTR (clicks/impressions) and conversion rate (conversions/clicks) from the raw funnel counts rather than reading them off a pre-built column.
 
-**Core metrics:**
-- ROAS = `SUM(revenue) / SUM(spend)`
-- ROI % = `(SUM(revenue) − SUM(spend)) / SUM(spend) × 100`
-- CAC = `SUM(spend) / SUM(conversions)`
+## 3. Executive Summary
 
-All ratio metrics were calculated as blended aggregates (sum of revenue over sum of spend), not as an average of per-row ratios, to avoid overweighting low-spend rows.
+**Every $1 spent returns $2.89 in revenue overall** (blended ROAS 2.89, ROI 189%, CAC $21.63) — marketing spend is solidly profitable in aggregate.
 
-## Key Findings
+**Channel performance varies more than 4x.** Organic/SEO (6.3 ROAS) and Email (5.4 ROAS) are the strongest performers, while Display (1.4 ROAS) lags well behind the rest. This gap isn't a funnel problem — **click-through and conversion rates are nearly identical across every channel** (CTR clustered at 1.5–1.8%, conversion rate at 4.2–4.7%). The real driver is cost: **CAC ranges from $3.40 (Organic/SEO) to $32.10 (Display)**, a nearly 10x spread, meaning the gap in return comes from what it costs to acquire a customer, not how well the funnel converts once someone's in it.
 
-**1. Overall spend is profitable.** Blended ROAS across all channels and the full year is **2.89x**, with a blended ROI of **189%** — every $1 spent returned $2.89 in revenue. Blended CAC is $21.63 per conversion.
+**No diminishing returns were found.** Weekly spend and ROAS show essentially zero correlation — high-spend weeks aren't systematically less efficient than low-spend weeks — suggesting the top channels have room to absorb more budget without an automatic drop in return.
 
-**2. Efficiency varies sharply by channel.** Organic/SEO (6.33x) and Email (5.43x) are the most efficient channels; Display (1.35x) is the weakest, with Paid Social (2.40x) also lagging. Comparing each channel's share of total spend against its share of total revenue shows Display and Paid Social together consume ~44% of budget but return only ~32% of revenue — a gap that represents a plausible budget reallocation opportunity.
+![Dashboard: KPI cards for spend, revenue, ROAS, ROI%, and CAC; weekly spend-vs-ROAS scatter by channel; ROAS by month trend, which holds in a stable 3.4–3.8 range with mild month-to-month variation.](Exports/overview.png)
 
-**3. The gap is channel-wide, not campaign-specific.** Breaking Display and Paid Social down by individual campaign shows near-identical ROAS across every campaign within each channel. This rules out "one bad campaign" as the explanation — the weakness is structural to the channel itself, not fixable by cutting a single underperforming campaign.
+## 4. Insights Deep Dive
 
-**4. Spend level does not explain the gap (no diminishing returns).** Blended ROAS stays in a tight 2.67–3.00 band across all 12 months with no clear trend. At the weekly level within Paid Social and Display individually, the correlation between spend and ROAS is essentially zero (r ≈ −0.05 for both). Even the highest-spend weeks of the year (November/December) show no consistent efficiency drop. Efficiency differences are between channels, not driven by how much is spent within a channel.
+- **Overall health check: blended ROAS of 2.89, ROI of 189%, and CAC of $21.63** establish that marketing spend is profitable in aggregate before breaking anything down further — the necessary baseline before channel- or campaign-level claims mean anything.
 
-**5. The real driver is acquisition cost, not funnel quality.** Click-through rate (1.5–1.83%) and conversion rate (4.15–4.7%) are nearly identical across all six channels — Display's funnel converts about as well as Paid Search's. What differs dramatically is cost per conversion (CAC): $3.41 for Organic/SEO vs. $26–32 for every paid channel, with Display highest at $32.13. The ROAS gap is a cost-efficiency story, not an audience-quality or creative-quality story.
+- **Channel-level ROAS ranges from 1.4 (Display) to 6.3 (Organic/SEO)** — a more than 4x spread. Paid Search and Paid Social together account for the majority of spend share (41% and 32% respectively) but their revenue share doesn't outpace that proportionally, while Organic/SEO punches well above its spend share (4% of spend, 9% of revenue).
 
-## Recommendation
+![Dashboard: channel-level ROAS, CAC, spend/revenue share, and ROI% comparisons.](Exports/channel_performance.png)
 
-Based on the findings above, the most defensible recommendation is a **partial budget reallocation from Display (and to a lesser extent Paid Social) toward Organic/SEO, Email, and Paid Search**, since the latter three convert spend into revenue substantially more efficiently and the underperformance is structural rather than tied to a single fixable campaign or a spend-scaling issue.
+- **CAC — not funnel quality — explains the channel gap.** CTR and conversion rate are nearly uniform across all six channels (roughly 1.5–1.8% CTR, 4.2–4.7% conversion rate), which rules out "some channels convert visitors better than others" as the explanation. CAC tells the real story instead: Organic/SEO's $3.40 CAC versus Display's $32.10 is close to a 10x difference, and that gap — not funnel performance — is what separates the best and worst channels.
 
-One caveat worth stating for a real-world stakeholder: Display advertising is often used for upper-funnel brand awareness rather than direct response, so a pure ROAS-based cut should be weighed against its non-revenue objectives — a limitation not present in this dataset since it only models direct conversion behavior.
+- **Campaign-level drill-down confirms the pattern holds within channels, not just between them.** SEO - Blog (6.4 ROAS) and SEO - Landing Pages (6.3) lead every campaign in the dataset, while Display - Banner (1.4) and Display - Native (1.3) sit at the bottom — meaning Display's weak performance isn't one bad campaign dragging down an average, it's consistent across the whole channel.
 
-## Limitations
+![Dashboard: campaign-level ROAS ranking; CTR vs. conversion rate by channel.](Exports/campaign.png)
 
-- All spend, revenue, and funnel figures are synthetic and were generated with built-in assumptions (see Dataset section) — they do not reflect any real business's actual marketing performance.
-- The dataset models only direct-response conversion; it does not capture brand-awareness value, cross-channel attribution effects, or multi-touch customer journeys.
-- Random noise was added at generation time, so exact figures will differ slightly if the dataset is regenerated with a different seed; the channel-level patterns and rankings are the intended, reproducible signal.
+- **No evidence of diminishing returns.** The weekly spend-vs-ROAS relationship shows essentially zero correlation — ROAS doesn't systematically drop as weekly spend increases within the observed range. This is a meaningful finding on its own: it means current underinvestment in top channels isn't being self-corrected by rising costs, and there's no signal (yet) that scaling budget in Organic/SEO or Email would erode their return.
+
+## 5. Recommendations
+
+- **Shift incremental budget toward Organic/SEO and Email, and away from Display.** With no evidence of diminishing returns and CAC — not funnel quality — driving the performance gap, the case for reallocating spend toward the cheapest-to-acquire channels is strong. *(Ties to: channel-level ROAS/CAC.)*
+
+- **Treat Display as a channel to fix or scale back, not scale up.** It has the lowest ROAS, highest CAC, and lowest ROI of any channel, and its weakness holds across both of its campaigns rather than being isolated to one. Before increasing spend here, the underlying acquisition cost needs to come down. *(Ties to: campaign-level drill-down.)*
+
+- **Don't prioritize funnel/landing-page optimization as the lever for closing the channel gap.** Since CTR and conversion rate are nearly uniform across channels, effort spent trying to out-convert Display's audience is unlikely to close the gap — the fix is on the acquisition-cost side, not the funnel side. *(Ties to: CTR/CVR by channel.)*
+
+- **Double down on the top campaigns specifically** — SEO - Blog, SEO - Landing Pages, and Email - Newsletter are the clear standouts (ROAS 5.7–6.4) and are good candidates for increased investment or as templates for what to replicate in weaker campaigns. *(Ties to: campaign-level drill-down.)*
+
+- **Use the flat spend-vs-ROAS relationship to justify a controlled budget test** — since there's no visible ceiling yet in this data, a deliberate incremental spend increase in Organic/SEO or Email (with monitoring) would help find where diminishing returns actually begin, rather than assuming none exists. *(Ties to: weekly spend-vs-ROAS trend.)*
+
+## 6. Caveats and Assumptions
+
+- **This dataset is fully synthetic**, generated specifically for this project rather than sourced from a real marketing account. Findings demonstrate the analytical approach — reallocating budget toward "Organic/SEO" in this dataset isn't a claim about real-world SEO economics.
+- **Attribution is simplified.** Revenue in this dataset is attributed directly to a single channel/campaign per row, with no multi-touch or cross-channel attribution modeling. In reality, a purchase often follows exposure to several channels, which this analysis doesn't disentangle.
+- **"No diminishing returns" reflects the spend range actually observed in the data**, not spend levels beyond it — it's not safe to assume ROAS would hold at, say, 5x or 10x the current budget for any channel.
+- **CTR and conversion rate uniformity was observed across a limited number of channels (six).** With more channels or more granular audience segments, funnel differences might reappear even though they're invisible at this level of aggregation.

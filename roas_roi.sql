@@ -16,8 +16,8 @@ SELECT
 FROM roas_roi;
 
                 -- Efficiency by Channel --
-WITH channel_agg AS (
-
+WITH channel_agg AS 
+(
     SELECT
     channel,
     ROUND(SUM(spend), 2) AS total_spend,
@@ -25,7 +25,6 @@ WITH channel_agg AS (
     ROUND(SUM(spend) / SUM(conversions), 2) AS blended_cac
 FROM roas_roi
 GROUP BY channel
-
 )
 SELECT 
     channel,
@@ -42,7 +41,6 @@ ORDER BY roas DESC;
                 -- Campaign-level Drill-down --
 
 WITH campaign_agg AS (
-
     SELECT
     channel,
     campaign,
@@ -51,7 +49,6 @@ WITH campaign_agg AS (
     ROUND(SUM(spend) / SUM(conversions), 2) AS blended_cac
 FROM roas_roi
 GROUP BY channel , campaign
-
 )
 SELECT 
     channel,
