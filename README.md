@@ -1,6 +1,6 @@
 # ROAS & ROI Analysis
 
-## 1. Background and Overview
+## Background and Overview
 
 Marketing budgets are only as good as the return they generate, but "which channels are actually worth the spend" is a surprisingly easy question to get wrong — a channel can look strong on ROAS while quietly having a worse funnel, or look weak overall while a handful of its campaigns are outperforming everything else. This project evaluates marketing return using a **fully synthetic marketing dataset**, generated specifically for this analysis and independent of any other dataset used elsewhere in this portfolio.
 
@@ -10,7 +10,7 @@ The analysis was built to answer four questions a marketing or growth team would
 - Is spend efficiency holding steady over time, or are channels showing diminishing returns as more is invested?
 - When a channel underperforms, is it because of a weak funnel (low click-through or conversion) or because it costs more to acquire each customer?
 
-## 2. Data Structure Overview
+## Data Structure Overview
 
 The dataset is a single flat table, `roas_roi_synthetic_data.csv` (742 rows, 10 columns), loaded into DuckDB and queried via `roas_roi.sql`. Each row represents one campaign's performance for a given week:
 
@@ -29,7 +29,7 @@ The dataset is a single flat table, `roas_roi_synthetic_data.csv` (742 rows, 10 
 
 Because this is a single flat, pre-aggregated synthetic table, no joins or data-cleaning stage were required. The SQL work centers on rolling these campaign-week rows up to overall, channel, and campaign-level summaries, plus monthly/weekly trend views — and on deriving CTR (clicks/impressions) and conversion rate (conversions/clicks) from the raw funnel counts rather than reading them off a pre-built column.
 
-## 3. Executive Summary
+## Executive Summary
 
 **Every $1 spent returns $2.89 in revenue overall** (blended ROAS 2.89, ROI 189%, CAC $21.63) — marketing spend is solidly profitable in aggregate.
 
@@ -39,7 +39,7 @@ Because this is a single flat, pre-aggregated synthetic table, no joins or data-
 
 ![Dashboard: KPI cards for spend, revenue, ROAS, ROI%, and CAC; weekly spend-vs-ROAS scatter by channel; ROAS by month trend, which holds in a stable 3.4–3.8 range with mild month-to-month variation.](Exports/overview.png)
 
-## 4. Insights Deep Dive
+## Insights Deep Dive
 
 - **Overall health check: blended ROAS of 2.89, ROI of 189%, and CAC of $21.63** establish that marketing spend is profitable in aggregate before breaking anything down further — the necessary baseline before channel- or campaign-level claims mean anything.
 
@@ -55,7 +55,7 @@ Because this is a single flat, pre-aggregated synthetic table, no joins or data-
 
 - **No evidence of diminishing returns.** The weekly spend-vs-ROAS relationship shows essentially zero correlation — ROAS doesn't systematically drop as weekly spend increases within the observed range. This is a meaningful finding on its own: it means current underinvestment in top channels isn't being self-corrected by rising costs, and there's no signal (yet) that scaling budget in Organic/SEO or Email would erode their return.
 
-## 5. Recommendations
+## Recommendations
 
 - **Shift incremental budget toward Organic/SEO and Email, and away from Display.** With no evidence of diminishing returns and CAC — not funnel quality — driving the performance gap, the case for reallocating spend toward the cheapest-to-acquire channels is strong. *(Ties to: channel-level ROAS/CAC.)*
 
@@ -67,7 +67,7 @@ Because this is a single flat, pre-aggregated synthetic table, no joins or data-
 
 - **Use the flat spend-vs-ROAS relationship to justify a controlled budget test** — since there's no visible ceiling yet in this data, a deliberate incremental spend increase in Organic/SEO or Email (with monitoring) would help find where diminishing returns actually begin, rather than assuming none exists. *(Ties to: weekly spend-vs-ROAS trend.)*
 
-## 6. Caveats and Assumptions
+## Caveats and Assumptions
 
 - **This dataset is fully synthetic**, generated specifically for this project rather than sourced from a real marketing account. Findings demonstrate the analytical approach — reallocating budget toward "Organic/SEO" in this dataset isn't a claim about real-world SEO economics.
 - **Attribution is simplified.** Revenue in this dataset is attributed directly to a single channel/campaign per row, with no multi-touch or cross-channel attribution modeling. In reality, a purchase often follows exposure to several channels, which this analysis doesn't disentangle.
